@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazy Loading Images with Infinite Scrolling</title>
+
+    <!--  -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
+    <!--  -->
+
+    <style>
+        .lazy-loading {
+            width: 300px;
+            min-height: 200px;
+            margin: 20px;
+            box-shadow: 5px 10px 15px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .fadeIn {
+            opacity: 1;
+        }
+
+        .loading-indicator {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 64px;
+            height: 64px;
+            margin: 8px;
+            border: 8px solid #000;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #000 transparent transparent transparent;
+        }
+
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 class="text-center">Section B:Lazy Loading</h1>
+
+    <!-- Images Container -->
+    <div id="imagesContainer" class="d-flex align-items-center flex-wrap m-auto w-50"></div>
+
+    <!-- Loading indicator -->
+    <div class="loading-indicator" id="loadingIndicator">
+        <div class="lds-ring">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+    <script>
+        let lazyTargets;
+        let page = 1;
+        let isLoading = false;
+
+        function isScrollAtBottom() {
+            return window.innerHeight + window.scrollY >= document.body.offsetHeight - 100;
+        }
+
+        function showLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        function hideLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        function loadImages() {
+            if (isLoading) {
+                return;
+            }
+
+            if (isScrollAtBottom()) {
+                isLoading = true;
+                showLoadingIndicator();
+
+                // Simulate fetching data (replace this with your actual data fetching logic)
+                setTimeout(() => {
+                    fetchImages();
+                }, 1000);
+            }
+        }
+
+        function fetchImages() {
+            const imagesContainer = document.getElementById('imagesContainer');
+
+            // Simulate fetching more images (replace this with your actual image fetching logic)
+            const newImages = Array.from({ length: 5 }, (_, index) => {
+                const imageUrl = `https://picsum.photos/id/${page * 5 + index + 10}/300/200`;
+                return `<img data-lazy="${imageUrl}" class="lazy-loading">`;
+            });
+
+            // Append the new images to the container
+            imagesContainer.innerHTML += newImages.join('');
+
+            lazyTargets = document.querySelectorAll('.lazy-loading');
+            lazyTargets.forEach(lazyLoad);
+
+            hideLoadingIndicator();
+            isLoading = false;
+            page++;
+        }
+
+        // Initial load with 10 images
+        showLoadingIndicator();
+        fetchImages();
+
+        // Set up event listener for scroll
+        window.addEventListener('scroll', loadImages);
+
+        // The lazy loading observer
+        function lazyLoad(target) {
+            const obs = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.getAttribute('data-lazy');
+
+                        img.setAttribute('src', src);
+                        img.classList.add('fadeIn');
+
+                        observer.disconnect();
+                    }
+                });
+            });
+            obs.observe(target);
+        }
+    </script>
+
+</body>
+
+</html>
